@@ -14,11 +14,52 @@ const navigationItems = [
   ["tools", "Software & tools", "pages/tools/index.html", "M4 4h16v12H4zM2 20h20l-2-4H4z"],
   ["process", "My work process", "pages/process/index.html", "M6 19a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm13-16a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM9 16h8a4 4 0 0 0 0-8h-2a4 4 0 0 1 0-8h3"],
   ["values", "Professional values", "pages/values/index.html", "M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z"],
+  ["pricing", "Pricing", "pages/pricing/index.html", "M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8ZM7.5 7.5h.01"],
   ["contact", "Contact", "pages/contact/index.html", "M3 5h18v14H3zM3 7l9 6 9-6"],
 ];
 
+const navigationSubmenus = {
+  bookkeeping: [
+    ["Transaction Management", "services/transaction-management/index.html"],
+    ["Bank & Credit Card Reconciliation", "services/reconciliation/index.html"],
+    ["Accounts Payable", "services/accounts-payable/index.html"],
+    ["Accounts Receivable", "services/accounts-receivable/index.html"],
+    ["Financial Reporting Support", "services/financial-reporting/index.html"],
+    ["Monthly Bookkeeping", "services/monthly-bookkeeping/index.html"],
+  ],
+};
+
 const makeIcon = (path) =>
   `<svg class="icon" aria-hidden="true" viewBox="0 0 24 24"><path d="${path}"/></svg>`;
+const activeSection = document.body.dataset.activeSection;
+const renderNavigationItem = ([id, label, route, path]) => {
+  const isActive = activeSection === id;
+  const submenu = navigationSubmenus[id];
+  if (!submenu) {
+    return `
+        <a class="nav-link${isActive ? " is-active" : ""}" href="${navigationBase}${route}"${isActive ? ' aria-current="page"' : ""}>
+          ${makeIcon(path)}<span>${label}</span>
+        </a>`;
+  }
+  return `
+        <div class="nav-group${isActive ? " is-open is-active" : ""}">
+          <div class="nav-group-row">
+            <a class="nav-link nav-group-link" href="${navigationBase}${route}">
+              ${makeIcon(path)}<span>${label}</span>
+            </a>
+            <button class="nav-group-toggle" type="button" aria-expanded="${isActive}" aria-controls="${id}-submenu" aria-label="${label} pages">
+              ${makeIcon("m6 9 6 6 6-6")}
+            </button>
+          </div>
+          <div class="nav-submenu" id="${id}-submenu">
+            <ul>
+              ${submenu.map(([pageLabel, pageRoute]) => `
+              <li><a class="nav-sublink" href="${navigationBase}${pageRoute}">${pageLabel.replace("&", "&amp;")}</a></li>`).join("")}
+            </ul>
+          </div>
+        </div>`;
+};
+
 const socialItems = [
   {
     label: "WhatsApp",
@@ -50,7 +91,7 @@ if (!navigation) {
 navigation.innerHTML = `
   <header class="mobile-header">
     <a class="brand brand--compact" href="${navigationBase}index.html" aria-label="Genesis Solomon, overview">
-      <span class="brand-mark brand-mark--gs" aria-hidden="true">GS</span>
+      <span class="brand-mark brand-mark--photo" aria-hidden="true"><img src="${navigationBase}assets/images/genesis-solomon-bookkeeper.jpg" alt=""></span>
       <span class="brand-copy"><strong>Genesis Solomon</strong><small>Bookkeeping &amp; support</small></span>
     </a>
     <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-navigation" aria-label="Open navigation">
@@ -60,14 +101,11 @@ navigation.innerHTML = `
   </header>
   <aside class="sidebar" aria-label="Portfolio sidebar">
     <a class="brand" href="${navigationBase}index.html" aria-label="Genesis Solomon, overview">
-      <span class="brand-mark brand-mark--gs" aria-hidden="true">GS</span>
+      <span class="brand-mark brand-mark--photo" aria-hidden="true"><img src="${navigationBase}assets/images/genesis-solomon-bookkeeper.jpg" alt=""></span>
       <span class="brand-copy"><strong>Genesis Solomon</strong><small>BOOKKEEPING SPECIALIST</small></span>
     </a>
     <nav class="site-navigation" id="site-navigation" aria-label="Main navigation">
-      ${navigationItems.map(([id, label, route, path]) => `
-        <a class="nav-link${document.body.dataset.activeSection === id ? " is-active" : ""}" href="${navigationBase}${route}"${document.body.dataset.activeSection === id ? ' aria-current="page"' : ""}>
-          ${makeIcon(path)}<span>${label}</span>
-        </a>`).join("")}
+      ${navigationItems.map(renderNavigationItem).join("")}
     </nav>
     <section class="sidebar-social" aria-labelledby="sidebar-social-title">
       <h2 class="sidebar-label" id="sidebar-social-title">CONNECT WITH ME</h2>
@@ -79,3 +117,26 @@ navigation.innerHTML = `
       </div>
     </section>
   </aside>`;
+
+
+// Submenus: the parent label is a link to its overview page; the chevron only expands or collapses.
+const pagePath = (url) => url.pathname.replace(/index\.html$/, "");
+const markCurrentNavigation = () => {
+  const here = new URL(window.location.href);
+  navigation.querySelectorAll(".nav-group-link, .nav-sublink").forEach((link) => {
+    const target = new URL(link.href);
+    const isCurrent = pagePath(target) === pagePath(here) && target.hash === here.hash;
+    link.classList.toggle("is-current", isCurrent);
+    if (isCurrent) link.setAttribute("aria-current", "page");
+    else link.removeAttribute("aria-current");
+  });
+};
+markCurrentNavigation();
+window.addEventListener("hashchange", markCurrentNavigation);
+
+navigation.querySelectorAll(".nav-group-toggle").forEach((toggle) => {
+  toggle.addEventListener("click", () => {
+    const isOpen = toggle.closest(".nav-group").classList.toggle("is-open");
+    toggle.setAttribute("aria-expanded", String(isOpen));
+  });
+});

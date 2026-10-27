@@ -1,5 +1,5 @@
 const menuToggle = document.querySelector(".menu-toggle");
-const navLinks = [...document.querySelectorAll(".nav-link")];
+const navLinks = [...document.querySelectorAll(".site-navigation a")];
 document.body.classList.add("menu-ready");
 
 function closeMenu() {
@@ -555,35 +555,341 @@ if (workSample) {
 
 const contactForm = document.querySelector("#contact-form");
 const formFeedback = document.querySelector("#form-feedback");
-contactForm?.addEventListener("submit", (event) => {
-  event.preventDefault();
-  if (!contactForm.reportValidity()) return;
 
-  const emailAddress = contactForm.dataset.contactEmail;
-  if (!emailAddress) {
-    formFeedback.textContent = "Email contact is not configured. Please use the contact details shown on this page.";
-    formFeedback.classList.add("is-error");
-    return;
-  }
+// Pricing page buttons link here with ?service=… so the matching service is preselected.
+const requestedService = { bookkeeping: "Bookkeeping Services", administrative: "Administrative Support", combined: "Both Bookkeeping and Administrative Support" }[new URLSearchParams(window.location.search).get("service")];
+const serviceSelect = contactForm?.querySelector("#service");
+if (requestedService && serviceSelect) {
+  const option = [...serviceSelect.options].find((item) => item.textContent === requestedService);
+  if (option) serviceSelect.value = option.value;
+}
+// Inquiries are saved through /api/inquiries; the thank-you panel appears only after the server confirms the record was stored.
+const contactThanks = document.querySelector("#contact-thanks");
+if (contactForm && contactThanks) {
+  const submitButton = contactForm.querySelector(".form-submit");
+  const submitLabel = contactForm.querySelector("[data-submit-label]");
+  const messageField = contactForm.querySelector("#message");
+  const messageCount = contactForm.querySelector("#message-count");
+  const fieldIds = { full_name: "full-name", email: "email", business_name: "business", service_needed: "service", industry: "industry", message: "message" };
+  const emailPattern = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+  const startedAt = Date.now();
+  const newSubmissionId = () => (window.crypto?.randomUUID ? window.crypto.randomUUID() : null);
+  // One id per inquiry: a retry after a dropped connection reuses it, so the server never stores the same inquiry twice.
+  let submissionId = newSubmissionId();
+  let sending = false;
 
-  const data = new FormData(contactForm);
-  const body = [
-    `Name: ${data.get("name")}`,
-    `Email: ${data.get("email")}`,
-    `Business: ${data.get("business") || "Not provided"}`,
-    `Service needed: ${data.get("service")}`,
-    `Industry: ${data.get("industry")}`,
-    "",
-    "Message:",
-    data.get("message"),
-  ].join("\n");
-  const subject = `Bookkeeping and business support inquiry from ${data.get("name")}`;
-  const draftUrl = `mailto:${emailAddress}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  const setFieldError = (name, text) => {
+    const input = contactForm.querySelector(`#${fieldIds[name]}`);
+    const error = contactForm.querySelector(`#${fieldIds[name]}-error`);
+    if (text) input.setAttribute("aria-invalid", "true");
+    else input.removeAttribute("aria-invalid");
+    error.textContent = text || "";
+    error.hidden = !text;
+  };
+  const showFeedback = (text, isError) => {
+    formFeedback.textContent = text;
+    formFeedback.classList.toggle("is-error", isError);
+  };
+  const checkFields = (data) => {
+    const errors = {};
+    if (!data.full_name.trim()) errors.full_name = "Please enter your full name.";
+    if (!data.email.trim()) errors.email = "Please enter your email address.";
+    else if (!emailPattern.test(data.email.trim())) errors.email = "Please enter a valid email address, like name@business.com.";
+    if (!data.service_needed) errors.service_needed = "Please choose the service you need.";
+    if (!data.industry) errors.industry = "Please choose your industry.";
+    if (!data.message.trim()) errors.message = "Please enter a message.";
+    return errors;
+  };
 
-  formFeedback.classList.remove("is-error");
-  formFeedback.textContent = "Your email app should open with the draft. It has not been sent until you review and send it there.";
-  window.location.href = draftUrl;
-});
+  messageField.addEventListener("input", () => { messageCount.textContent = `${messageField.value.length}/3000`; });
+  ["input", "change"].forEach((type) => contactForm.addEventListener(type, (event) => {
+    if (fieldIds[event.target.name] && event.target.hasAttribute("aria-invalid")) setFieldError(event.target.name, "");
+  }));
+
+  contactForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (sending) return;
+    const data = { full_name: "", email: "", business_name: "", service_needed: "", industry: "", message: "", ...Object.fromEntries(new FormData(contactForm)) };
+    const errors = checkFields(data);
+    Object.keys(fieldIds).forEach((name) => setFieldError(name, errors[name]));
+    const firstInvalid = Object.keys(fieldIds).find((name) => errors[name]);
+    if (firstInvalid) {
+      showFeedback("Please check the highlighted fields.", true);
+      contactForm.querySelector(`#${fieldIds[firstInvalid]}`).focus();
+      return;
+    }
+
+    sending = true;
+    submitButton.disabled = true;
+    contactForm.setAttribute("aria-busy", "true");
+    submitLabel.textContent = "Sending…";
+    showFeedback("Sending your inquiry…", false);
+    try {
+      const response = await fetch(contactForm.dataset.endpoint, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ ...data, client_ref: submissionId, started_at: startedAt }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || result.ok !== true) {
+        Object.entries(result.fields || {}).forEach(([name, text]) => { if (fieldIds[name]) setFieldError(name, text); });
+        throw new Error(result.error || "Your inquiry couldn’t be sent just now. Please try again in a moment.");
+      }
+      contactForm.reset();
+      messageCount.textContent = "0/3000";
+      showFeedback("", false);
+      submissionId = newSubmissionId();
+      contactForm.hidden = true;
+      contactThanks.hidden = false;
+      contactThanks.focus();
+    } catch (error) {
+      // The entered details stay in the form so the visitor can try again.
+      showFeedback(error instanceof TypeError ? "Your inquiry couldn’t be sent. Please check your connection and try again." : error.message, true);
+    } finally {
+      sending = false;
+      submitButton.disabled = false;
+      contactForm.removeAttribute("aria-busy");
+      submitLabel.textContent = "Send Message";
+    }
+  });
+}
 
 const copyrightYear = document.querySelector("#copyright-year");
 if (copyrightYear) copyrightYear.textContent = String(new Date().getFullYear());
+
+const experienceCarousel = document.querySelector("[data-xp-carousel]");
+if (experienceCarousel) {
+  const viewport = experienceCarousel.querySelector(".ov-xp-viewport");
+  const track = experienceCarousel.querySelector(".ov-xp-track");
+  const firstSet = track.querySelector(".ov-xp-set");
+  const cards = [...firstSet.children];
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const speed = 26;
+  let offset = 0;
+  let target = null;
+  let step = 0;
+  let setWidth = 0;
+  let hovering = false;
+  let focused = false;
+  let onScreen = true;
+  let lastTime = 0;
+
+  experienceCarousel.classList.add("is-enhanced");
+
+  const wrap = (value) => ((value % setWidth) + setWidth) % setWidth;
+
+  function render() {
+    track.style.transform = `translate3d(${-offset}px, 0, 0)`;
+  }
+
+  function layout() {
+    const viewportStyle = getComputedStyle(viewport);
+    const width = viewport.clientWidth - parseFloat(viewportStyle.paddingLeft) - parseFloat(viewportStyle.paddingRight);
+    const perView = width >= 820 ? 3 : width >= 540 ? 2 : 1;
+    const gap = parseFloat(getComputedStyle(firstSet).columnGap) || 0;
+    const progress = setWidth ? offset / setWidth : 0;
+    experienceCarousel.style.setProperty("--ov-xp-card", `${(width - gap * (perView - 1)) / perView}px`);
+    step = cards[0].getBoundingClientRect().width + gap;
+    setWidth = step * cards.length;
+    offset = wrap(progress * setWidth);
+    target = null;
+    render();
+  }
+
+  function moveTo(destination) {
+    if (destination < 0) {
+      offset += setWidth;
+      destination += setWidth;
+    }
+    if (reduceMotion.matches) {
+      offset = wrap(destination);
+      target = null;
+      render();
+    } else {
+      target = destination;
+    }
+  }
+
+  function tick(now) {
+    const seconds = Math.min((now - lastTime) / 1000, 0.1);
+    lastTime = now;
+    if (target !== null) {
+      const remaining = target - offset;
+      offset += remaining * Math.min(1, seconds * 8);
+      if (Math.abs(remaining) < 0.5) {
+        offset = target;
+        target = null;
+      }
+    } else if (!hovering && !focused && onScreen && !reduceMotion.matches) {
+      offset += speed * seconds;
+    }
+    if (offset >= setWidth) {
+      offset -= setWidth;
+      if (target !== null) target -= setWidth;
+    }
+    render();
+    requestAnimationFrame(tick);
+  }
+
+  experienceCarousel.querySelector("[data-xp-prev]").addEventListener("click", () => moveTo((Math.round(offset / step) - 1) * step));
+  experienceCarousel.querySelector("[data-xp-next]").addEventListener("click", () => moveTo((Math.round(offset / step) + 1) * step));
+  experienceCarousel.addEventListener("mouseenter", () => { hovering = true; });
+  experienceCarousel.addEventListener("mouseleave", () => { hovering = false; });
+  experienceCarousel.addEventListener("focusin", () => { focused = true; });
+  experienceCarousel.addEventListener("focusout", (event) => {
+    if (!experienceCarousel.contains(event.relatedTarget)) focused = false;
+  });
+  if ("IntersectionObserver" in window) {
+    new IntersectionObserver(([entry]) => { onScreen = entry.isIntersecting; }).observe(experienceCarousel);
+  }
+  if ("ResizeObserver" in window) new ResizeObserver(layout).observe(viewport);
+  else window.addEventListener("resize", layout);
+
+  layout();
+  requestAnimationFrame((now) => {
+    lastTime = now;
+    requestAnimationFrame(tick);
+  });
+}
+
+// Homepage "All Records" dialog. Every entry below is fictional demo data for the portfolio, not client records.
+const recordsDialog = document.querySelector("[data-records-dialog]");
+const recordsOpener = document.querySelector("[data-records-open]");
+if (recordsDialog && recordsOpener && typeof recordsDialog.showModal === "function") {
+  const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
+  const monthName = new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric", timeZone: "UTC" });
+  const shortDate = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
+  const sampleTransactions = [
+    ["2026-10-26", "Payment from Sample Client A", 2500, "Posted"],
+    ["2026-10-25", "Office supplies", -150, "Posted"],
+    ["2026-10-24", "Payment from Sample Client B", 1200, "Posted"],
+    ["2026-10-23", "Software subscription", -99, "Posted"],
+    ["2026-10-22", "Utility bill", -120, "Posted"],
+    ["2026-10-20", "Internet service", -75, "Pending review"],
+    ["2026-10-15", "Payment from Sample Client C", 1850, "Posted"],
+    ["2026-10-10", "Business insurance", -210, "Posted"],
+    ["2026-10-05", "Office rent", -1400, "Posted"],
+    ["2026-09-28", "Payment from Sample Client A", 2300, "Posted"],
+    ["2026-09-22", "Bank service fee", -15, "Posted"],
+    ["2026-09-18", "Software subscription", -99, "Posted"],
+    ["2026-09-12", "Utility bill", -118, "Posted"],
+    ["2026-09-05", "Office rent", -1400, "Posted"],
+    ["2026-09-03", "Payment from Sample Client D", 1600, "Posted"],
+  ].map(([date, description, amount, status]) => ({ date, month: date.slice(0, 7), description, amount, status, type: amount > 0 ? "Income" : "Expense" }));
+  const sampleReconciliations = [
+    ["Sample Operating Checking", "Sep 1 – Sep 30, 2026", "Reconciled", "Oct 6, 2026"],
+    ["Sample Business Savings", "Sep 1 – Sep 30, 2026", "Reconciled", "Oct 6, 2026"],
+    ["Sample Business Credit Card", "Sep 1 – Sep 30, 2026", "In review", "Oct 20, 2026"],
+    ["Sample Operating Checking", "Oct 1 – Oct 31, 2026", "Period open", "Oct 26, 2026"],
+  ];
+  const totals = (month) => {
+    const rows = sampleTransactions.filter((row) => row.month === month);
+    const inflow = rows.filter((row) => row.amount > 0).reduce((sum, row) => sum + row.amount, 0);
+    const outflow = rows.filter((row) => row.amount < 0).reduce((sum, row) => sum - row.amount, 0);
+    return { inflow, outflow };
+  };
+  // Report previews are calculated from the sample transactions so the figures agree with each other.
+  const october = totals("2026-10");
+  const september = totals("2026-09");
+  const openingCash = 8000;
+  const closingCash = openingCash + september.inflow - september.outflow;
+  const assets = [["Cash (sample)", closingCash], ["Accounts receivable (sample)", 1200], ["Equipment (sample)", 3500]];
+  const liabilities = [["Accounts payable (sample)", 640], ["Credit card balance (sample)", 412]];
+  const totalAssets = assets.reduce((sum, [, value]) => sum + value, 0);
+  const totalLiabilities = liabilities.reduce((sum, [, value]) => sum + value, 0);
+  const sampleReports = [
+    { name: "Profit and Loss", period: "Oct 1 – Oct 26, 2026", lines: [["Income", october.inflow], ["Expenses", -october.outflow], ["Net income", october.inflow - october.outflow, true]] },
+    { name: "Balance Sheet", period: "As of Sep 30, 2026", lines: [...assets, ["Total assets", totalAssets, true], ...liabilities, ["Total liabilities", totalLiabilities, true], ["Owner’s equity", totalAssets - totalLiabilities, true]] },
+    { name: "Cash Flow Summary", period: "Sep 1 – Sep 30, 2026", lines: [["Opening cash", openingCash], ["Cash received", september.inflow], ["Cash paid", -september.outflow], ["Closing cash", closingCash, true]] },
+  ];
+
+  const icon = (id) => `<svg class="icon" aria-hidden="true"><use href="#${id}"/></svg>`;
+  const escapeHtml = (text) => String(text).replace(/[&<>"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[char]);
+  const statusPill = (status) => {
+    const tone = { Posted: "done", Reconciled: "done", "Pending review": "pending", "In review": "pending" }[status] || "open";
+    return `<span class="rd-pill rd-pill--${tone}">${tone === "done" ? icon("i-check") : ""}${escapeHtml(status)}</span>`;
+  };
+  const formatDate = (iso) => shortDate.format(new Date(`${iso}T00:00:00Z`));
+
+  const tabs = [...recordsDialog.querySelectorAll("[data-records-tab]")];
+  const search = recordsDialog.querySelector("[data-records-search]");
+  const period = recordsDialog.querySelector("[data-records-period]");
+  const rowsBody = recordsDialog.querySelector("[data-records-rows]");
+  const emptyMessage = recordsDialog.querySelector("[data-records-empty]");
+  const summary = recordsDialog.querySelector("[data-records-summary]");
+  const preview = recordsDialog.querySelector("[data-records-preview]");
+  const reportList = recordsDialog.querySelector("[data-records-reports]");
+  const counts = { transactions: sampleTransactions.length, reconciliation: sampleReconciliations.length, reports: sampleReports.length };
+  Object.entries(counts).forEach(([key, count]) => { recordsDialog.querySelector(`[data-records-count="${key}"]`).textContent = `(${count})`; });
+
+  [...new Set(sampleTransactions.map((row) => row.month))].forEach((month) => {
+    period.append(new Option(`${monthName.format(new Date(`${month}-01T00:00:00Z`))} (sample)`, month));
+  });
+
+  function renderTransactions() {
+    const query = search.value.trim().toLowerCase();
+    const matches = sampleTransactions.filter((row) => {
+      if (period.value !== "all" && row.month !== period.value) return false;
+      if (!query) return true;
+      return [row.description, row.type, row.status, formatDate(row.date), money.format(Math.abs(row.amount))].join(" ").toLowerCase().includes(query);
+    });
+    rowsBody.innerHTML = matches.map((row) => `<tr><td data-label="Date">${formatDate(row.date)}</td><td class="rd-desc" data-label="Description">${escapeHtml(row.description)}</td><td data-label="Type"><span class="rd-pill rd-pill--${row.type.toLowerCase()}">${row.type}</span></td><td data-label="Amount" class="rd-num ${row.amount > 0 ? "rd-in" : "rd-out"}">${row.amount > 0 ? "" : "−"}${money.format(Math.abs(row.amount))}</td><td data-label="Status">${statusPill(row.status)}</td></tr>`).join("");
+    emptyMessage.hidden = matches.length > 0;
+    summary.textContent = `Showing ${matches.length} of ${sampleTransactions.length} sample transactions.`;
+  }
+
+  recordsDialog.querySelector("[data-records-reconciliation]").innerHTML = sampleReconciliations
+    .map(([account, statementPeriod, status, updated]) => `<tr><td class="rd-desc" data-label="Account">${escapeHtml(account)}</td><td data-label="Statement period">${statementPeriod}</td><td data-label="Status">${statusPill(status)}</td><td data-label="Last updated">${updated}</td></tr>`).join("");
+
+  reportList.innerHTML = sampleReports.map((report, index) => `<li><div><strong>${report.name}</strong><small>${report.period} · sample report</small></div><button class="rd-preview-btn" type="button" aria-expanded="false" aria-controls="rd-report-preview" data-report-index="${index}">Preview</button></li>`).join("");
+  preview.id = "rd-report-preview";
+  reportList.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-report-index]");
+    if (!button) return;
+    const wasOpen = button.getAttribute("aria-expanded") === "true";
+    reportList.querySelectorAll("[data-report-index]").forEach((item) => item.setAttribute("aria-expanded", "false"));
+    if (wasOpen) { preview.hidden = true; return; }
+    const report = sampleReports[Number(button.dataset.reportIndex)];
+    button.setAttribute("aria-expanded", "true");
+    preview.innerHTML = `<h3>${report.name} — sample preview</h3><p>${report.period}. Illustrative figures calculated from the sample entries above.</p><dl>${report.lines.map(([label, value, total]) => `<dt${total ? ' class="is-total"' : ""}>${escapeHtml(label)}</dt><dd${total ? ' class="is-total"' : ""}>${value < 0 ? "−" : ""}${money.format(Math.abs(value))}</dd>`).join("")}</dl>`;
+    preview.hidden = false;
+  });
+
+  function selectTab(tab, moveFocus) {
+    tabs.forEach((item) => {
+      const selected = item === tab;
+      item.setAttribute("aria-selected", String(selected));
+      item.tabIndex = selected ? 0 : -1;
+      recordsDialog.querySelector(`#${item.getAttribute("aria-controls")}`).hidden = !selected;
+    });
+    if (moveFocus) tab.focus();
+  }
+  tabs.forEach((tab, index) => {
+    tab.addEventListener("click", () => selectTab(tab, false));
+    tab.addEventListener("keydown", (event) => {
+      const next = { ArrowRight: index + 1, ArrowLeft: index - 1, Home: 0, End: tabs.length - 1 }[event.key];
+      if (next === undefined) return;
+      event.preventDefault();
+      selectTab(tabs[(next + tabs.length) % tabs.length], true);
+    });
+  });
+
+  search.addEventListener("input", renderTransactions);
+  period.addEventListener("change", renderTransactions);
+  renderTransactions();
+
+  recordsOpener.addEventListener("click", () => {
+    document.documentElement.classList.add("records-open");
+    recordsDialog.showModal();
+    tabs.find((tab) => tab.getAttribute("aria-selected") === "true").focus();
+  });
+  recordsDialog.querySelector("[data-records-close]").addEventListener("click", () => recordsDialog.close());
+  // A click that lands on the dialog element itself is on the dimmed backdrop, outside the panel.
+  recordsDialog.addEventListener("click", (event) => {
+    if (event.target === recordsDialog) recordsDialog.close();
+  });
+  recordsDialog.addEventListener("close", () => {
+    document.documentElement.classList.remove("records-open");
+    recordsOpener.focus();
+  });
+}

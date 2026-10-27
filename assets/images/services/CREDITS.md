@@ -13,3 +13,7 @@ Downloaded from Pexels (900 × 600, compressed) and used under the Pexels Licens
 | monthly-bookkeeping.jpg | https://www.pexels.com/photo/8092402/ |
 | bookkeeping-cleanup.jpg | https://www.pexels.com/photo/7821674/ |
 | financial-document-management.jpg | https://www.pexels.com/photo/34293528/ |
+| bookkeeping-cta-laptop.jpg | https://www.pexels.com/photo/7109314/ (Bookkeeping Services overview CTA) |
+| bookkeeping-cta-workspace.jpg | https://www.pexels.com/photo/20552572/ (Bookkeeping Services overview CTA) |
+
+| executive-office-city-view.jpg | https://www.pexels.com/photo/7377687/ (homepage hero background) |

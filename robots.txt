@@ -1,0 +1,5 @@
+# Allow all search engines to crawl the site.
+# The Sitemap line is added by scripts/finalize-seo.mjs once the production domain is confirmed.
+User-agent: *
+Allow: /
+Disallow: /admin/

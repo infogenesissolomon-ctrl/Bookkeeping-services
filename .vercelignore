@@ -1,0 +1,5 @@
+# Project files that should not be published on the live site.
+docs/
+scripts/
+supabase/
+.env.example

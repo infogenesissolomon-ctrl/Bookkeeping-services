@@ -1,1 +1,7 @@
 Genesis Solomon Professional Bookkeeper Expert.pdf
+
+# Local environment files hold Supabase keys; never commit them.
+.env
+.env.*
+!.env.example
+.vercel
