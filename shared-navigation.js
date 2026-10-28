@@ -140,15 +140,3 @@ navigation.querySelectorAll(".nav-group-toggle").forEach((toggle) => {
     toggle.setAttribute("aria-expanded", String(isOpen));
   });
 });
-
-// tawk.to live chat (official embed code), added once per page. Every public page loads this file; the admin dashboard does not.
-if (!document.querySelector('script[src^="https://embed.tawk.to/"]')) {
-  window.Tawk_API = window.Tawk_API || {};
-  window.Tawk_LoadStart = new Date();
-  const tawkScript = document.createElement("script");
-  tawkScript.async = true;
-  tawkScript.src = "https://embed.tawk.to/6ae08d761e2fa534748c9074/1k5uih5t3";
-  tawkScript.charset = "UTF-8";
-  tawkScript.setAttribute("crossorigin", "*");
-  document.head.appendChild(tawkScript);
-}
