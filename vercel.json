@@ -1,7 +1,17 @@
 {
+  "redirects": [
+    { "source": "/pages/process", "destination": "/#work-process", "permanent": true },
+    { "source": "/pages/process/:path*", "destination": "/#work-process", "permanent": true },
+    { "source": "/pages/industries", "destination": "/pages/about/#industries", "permanent": true },
+    { "source": "/pages/industries/:path*", "destination": "/pages/about/#industries", "permanent": true },
+    { "source": "/pages/tools", "destination": "/pages/about/#tools", "permanent": true },
+    { "source": "/pages/tools/:path*", "destination": "/pages/about/#tools", "permanent": true },
+    { "source": "/pages/values", "destination": "/#professional-values", "permanent": true },
+    { "source": "/pages/values/:path*", "destination": "/#professional-values", "permanent": true }
+  ],
   "headers": [
     {
-      "source": "/admin/:path*",
+      "source": "/admin(/.*)?",
       "headers": [
         { "key": "X-Robots-Tag", "value": "noindex, nofollow" },
         { "key": "Cache-Control", "value": "no-store" },

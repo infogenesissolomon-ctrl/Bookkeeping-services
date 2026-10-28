@@ -25,7 +25,7 @@ document.addEventListener("keydown", (event) => {
 if ("IntersectionObserver" in window) {
   if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
     const revealTargets = document.querySelectorAll(
-      ".about-section, .services-section, .admin-section, .industries-section, .tools-section, .process-section, .values-section, .expectations-section, .contact-section, .work-samples-section",
+      ".about-section, .services-section, .admin-section, .industries-section, .tools-section, .process-section, .values-section, .expectations-section, .contact-section, .work-samples-section, .ov-bn, [data-reveal]",
     );
     const revealObserver = new IntersectionObserver((entries, observer) => {
       entries.forEach((entry) => {
@@ -654,6 +654,54 @@ if (contactForm && contactThanks) {
   });
 }
 
+// Contact page tabs: Send an Inquiry (the form above) and Book a Consultation (Google Calendar).
+// Switching only hides a panel, so anything typed in the form stays put.
+const contactTabList = document.querySelector("[data-contact-tabs]");
+if (contactTabList) {
+  const contactTabs = [...contactTabList.querySelectorAll('[role="tab"]')];
+  const bookingEmbed = document.querySelector("[data-booking-embed]");
+  // Google's own embeddable version of the booking page (the same schedule calendar.app.google/zAW1LH43CHeXtq1j8 opens).
+  const bookingEmbedUrl = "https://calendar.google.com/calendar/appointments/schedules/AcZssZ1oJbJEkolzzUrk0h0IjjaWTPnIroY_7LFN2zTxvgLRxXAtI3MJhfjFs1CFFyu03uHJt5qMZ3Gw?gv=true";
+
+  // The scheduler only fits once the panel is about 600px wide; narrower screens keep just the button.
+  // It loads the first time the booking tab is shown, never on page load behind the inquiry tab.
+  const showBookingEmbed = () => {
+    if (!bookingEmbed || bookingEmbed.childElementCount || bookingEmbed.parentElement.clientWidth < 600) return;
+    const frame = document.createElement("iframe");
+    frame.src = bookingEmbedUrl;
+    frame.title = "Book a consultation with Genesis Solomon on Google Calendar";
+    frame.loading = "lazy";
+    bookingEmbed.append(frame);
+    bookingEmbed.hidden = false;
+  };
+
+  const selectContactTab = (tab, { focus = false, remember = true } = {}) => {
+    contactTabs.forEach((other) => {
+      const selected = other === tab;
+      other.setAttribute("aria-selected", String(selected));
+      other.tabIndex = selected ? 0 : -1;
+      document.getElementById(other.getAttribute("aria-controls")).hidden = !selected;
+    });
+    if (focus) tab.focus();
+    if (remember) history.replaceState(null, "", tab.id === "ct-tab-inquiry" ? "#inquiry" : "#book");
+    if (tab.id === "ct-tab-book") showBookingEmbed();
+  };
+
+  contactTabs.forEach((tab) => tab.addEventListener("click", () => selectContactTab(tab)));
+  contactTabList.addEventListener("keydown", (event) => {
+    const index = contactTabs.indexOf(document.activeElement);
+    if (index < 0) return;
+    const next = { ArrowRight: index + 1, ArrowDown: index + 1, ArrowLeft: index - 1, ArrowUp: index - 1, Home: 0, End: contactTabs.length - 1 }[event.key];
+    if (next === undefined) return;
+    event.preventDefault();
+    selectContactTab(contactTabs[(next + contactTabs.length) % contactTabs.length], { focus: true });
+  });
+
+  // The inquiry form opens first; links to #book open the booking view directly.
+  const startOnBooking = window.location.hash === "#book" && !requestedService;
+  selectContactTab(document.getElementById(startOnBooking ? "ct-tab-book" : "ct-tab-inquiry"), { remember: false });
+}
+
 const copyrightYear = document.querySelector("#copyright-year");
 if (copyrightYear) copyrightYear.textContent = String(new Date().getFullYear());
 
@@ -893,3 +941,58 @@ if (recordsDialog && recordsOpener && typeof recordsDialog.showModal === "functi
     recordsOpener.focus();
   });
 }
+
+// Count-up figures (Overview Business Growth, About Me statistics). The HTML already holds each final value,
+// so without JavaScript or with reduced motion nothing changes. Each figure counts up once, the first time it is seen.
+const countFigures = document.querySelectorAll("[data-count-to]");
+if (countFigures.length && "IntersectionObserver" in window && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+  const format = (figure, value) => `${figure.dataset.countPrefix || ""}${value}${figure.dataset.countSuffix || ""}`;
+  const countUp = (figure) => {
+    const target = Number(figure.dataset.countTo);
+    const duration = Number(figure.dataset.countDuration) || 1800;
+    const start = performance.now();
+    const step = (now) => {
+      const progress = Math.min((now - start) / duration, 1);
+      figure.textContent = format(figure, Math.round(target * (1 - (1 - progress) ** 3)));
+      if (progress < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  };
+  const countObserver = new IntersectionObserver((entries, observer) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      observer.unobserve(entry.target);
+      countUp(entry.target);
+    });
+  }, { threshold: 0.6 });
+  countFigures.forEach((figure) => {
+    figure.textContent = format(figure, 0);
+    countObserver.observe(figure);
+  });
+}
+
+// Industry grids (About Me, Bookkeeping Services): the first three cards show by default; the button reveals the rest
+// in the same grid. Without JavaScript the button stays hidden and every card shows.
+document.querySelectorAll("[data-ix-toggle]").forEach((industryToggle) => {
+  const industryGrid = document.getElementById(industryToggle.getAttribute("aria-controls"));
+  if (!industryGrid) return;
+  const extras = industryGrid.querySelectorAll(".ix-extra");
+  const label = industryToggle.querySelector("[data-ix-label]");
+  industryGrid.querySelectorAll("img").forEach((photo) => {
+    const hide = () => photo.classList.add("is-missing");
+    if (photo.complete && !photo.naturalWidth) hide();
+    else photo.addEventListener("error", hide, { once: true });
+  });
+  const setExpanded = (expanded) => {
+    industryGrid.classList.toggle("is-collapsed", !expanded);
+    industryToggle.setAttribute("aria-expanded", String(expanded));
+    label.textContent = expanded ? "Show Less" : `+${extras.length} More Industries`;
+  };
+  setExpanded(false);
+  industryToggle.hidden = false;
+  industryToggle.addEventListener("click", () => {
+    const expanded = industryToggle.getAttribute("aria-expanded") !== "true";
+    setExpanded(expanded);
+    if (!expanded) industryGrid.closest("section").scrollIntoView({ block: "start", behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+  });
+});

@@ -1,9 +1,13 @@
 // POST /api/inquiries — saves a Contact page inquiry to Supabase and answers 201 only after the row is stored.
+// A newly saved inquiry then triggers an email notification to the site owner; its outcome never changes the answer.
 const { serverConfig, secretHeaders, hashSubmitter, clientIp } = require("./_supabase");
+const { emailConfig } = require("./_email");
+const { notifyNewInquiry } = require("./_notify");
 
 const SERVICES = ["Bookkeeping Services", "Administrative Support", "Both Bookkeeping and Administrative Support", "Other"];
 const INDUSTRIES = ["Construction", "Real Estate", "Small Business", "Landscaping & Lawn Care", "Other"];
-const EMAIL_PATTERN = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+// Plain addresses only: no double quotes, brackets, commas, or semicolons, which mail libraries treat as address syntax.
+const EMAIL_PATTERN = /^[^\s@"(),:;<>[\]\\]+@[^\s@"(),:;<>[\]\\]+\.[^\s@"(),:;<>[\]\\]+$/;
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const RATE_LIMIT = { count: 3, minutes: 10 };
 const MIN_FILL_MS = 3000;
@@ -81,15 +85,20 @@ module.exports = async function handler(req, res) {
     }
 
     const clientRef = UUID_PATTERN.test(String(body.client_ref || "")) ? body.client_ref : null;
+    const notification = emailConfig()
+      ? { notification_status: "sending", notification_attempts: 1, notification_attempted_at: new Date().toISOString() }
+      : { notification_status: "not_configured" };
     const insert = await fetch(`${config.url}/rest/v1/inquiries${clientRef ? "?on_conflict=client_ref" : ""}`, {
       method: "POST",
       headers: secretHeaders(config.secretKey, { prefer: `return=representation${clientRef ? ",resolution=ignore-duplicates" : ""}` }),
-      body: JSON.stringify({ ...data, client_ref: clientRef, submitter_hash: submitterHash }),
+      body: JSON.stringify({ ...data, ...notification, client_ref: clientRef, submitter_hash: submitterHash }),
     });
     if (!insert.ok) throw new Error(`insert ${insert.status} ${await insert.text()}`);
     const rows = await insert.json();
     // An empty result means this client_ref was already saved by an earlier attempt of the same submission.
     if (!Array.isArray(rows)) throw new Error("insert returned no rows array");
+    // Only the request that actually stored the row sends the notification, so a retried submission never emails twice.
+    if (rows.length && notification.notification_status === "sending") await notifyNewInquiry(config, rows[0]);
     return res.status(201).json({ ok: true, duplicate: rows.length === 0 });
   } catch (error) {
     // Log the failure without the visitor's details.

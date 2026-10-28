@@ -1,0 +1,8 @@
+{
+  "name": "genesis-solomon-bookkeeping",
+  "private": true,
+  "description": "Static site plus Vercel functions in /api. nodemailer sends inquiry notifications and replies through Gmail.",
+  "dependencies": {
+    "nodemailer": "10.1.7"
+  }
+}

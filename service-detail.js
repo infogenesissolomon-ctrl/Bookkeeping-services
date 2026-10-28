@@ -46,6 +46,11 @@ const servicePages = {
         href: "../bookkeeping-cleanup/index.html",
       },
       {
+        title: "Payroll bookkeeping support",
+        description: "Record and reconcile payroll information from approved reports.",
+        href: "../payroll-bookkeeping-support/index.html",
+      },
+      {
         title: "Financial document management",
         description: "Keep statements, invoices, receipts, and supporting records organized.",
         href: "../financial-document-management/index.html",
@@ -257,63 +262,31 @@ const servicePages = {
       },
     ],
   },
-  "bookkeeping-cleanup": {
-    title: "Bookkeeping Cleanup and Catch-Up",
+  "payroll-bookkeeping-support": {
+    title: "Payroll Bookkeeping Support",
     description:
-      "Review existing bookkeeping records, organize historical activity, and document unresolved issues for your review.",
-    icon: "i-search",
+      "Record and organize payroll bookkeeping entries from approved payroll reports and coordinate questions with you or your provider.",
+    icon: "i-clipboard",
     introduction:
-      "Cleanup and catch-up support starts with the records that are available. I can review historical bookkeeping, organize uncategorized items, investigate differences in the supporting information, and prepare a list of questions or unresolved issues for you.",
+      "Payroll bookkeeping support is limited to recording and organizing financial information from reports prepared or approved through your payroll process. I can reconcile related bookkeeping accounts and flag questions for you or your payroll provider. This is not independent payroll processing, payroll tax preparation, or tax advice.",
     helps:
-      "A structured review can make gaps and open questions easier to see, helping you decide what information is needed before records are updated or relied upon.",
+      "Organized payroll entries and supporting reports can make it easier to review payroll-related expenses and liabilities alongside the rest of the bookkeeping records.",
     groups: [
       {
-        title: "Historical records and transactions",
+        title: "Recording approved payroll information",
         tasks: [
-          ["Review existing bookkeeping records", "Assess the supplied records and identify areas that need organizing or follow-up."],
-          ["Organize uncategorized transactions", "Sort uncategorized activity using available details and flag items that remain unclear."],
-          ["Identify duplicate entries", "Spot entries that may have been recorded more than once and list them for review."],
-          ["Identify missing transactions", "Compare available information and flag possible omissions for your confirmation."],
-          ["Organize historical financial records", "Arrange older bookkeeping files and supporting documents by period or category."],
+          ["Record payroll journal entries", "Enter journal information based on payroll reports approved by you or your provider."],
+          ["Record payroll expenses", "Post payroll expense amounts from the supplied reports to the agreed bookkeeping records."],
+          ["Record employer payroll tax liabilities", "Record liabilities shown in supplied payroll reports without calculating or preparing payroll taxes."],
+          ["Organize payroll records", "Keep payroll reports and related supporting documents filed in the agreed location."],
         ],
       },
       {
-        title: "Reconciliation and follow-up",
+        title: "Reconciliation and coordination",
         tasks: [
-          ["Investigate reconciliation discrepancies", "Trace differences through the supplied records and document unresolved questions."],
-          ["Review inconsistent transaction categorization", "Identify categories that appear inconsistent and prepare them for your review."],
-          ["Assist with overdue bookkeeping updates", "Work through agreed outstanding periods using the records and access provided."],
-          ["Prepare a list of unresolved issues", "Summarize missing information, open discrepancies, and questions requiring client review."],
-        ],
-      },
-    ],
-  },
-  "financial-document-management": {
-    title: "Financial Document Management",
-    description:
-      "Organize statements, invoices, receipts, and monthly bookkeeping files so supporting records are easier to locate.",
-    icon: "i-folder",
-    introduction:
-      "Financial document management creates a clear, consistent place for the records that support bookkeeping activity. I can organize the digital files you provide, maintain agreed naming conventions, and prepare documents for review or handoff to your accountant or tax professional.",
-    helps:
-      "Well-organized supporting documents can make it easier to trace transactions, retrieve records when requested, and prepare information for professional review.",
-    groups: [
-      {
-        title: "Statements and transaction support",
-        tasks: [
-          ["Organize bank statements", "File bank statements by account and period using the agreed folder structure."],
-          ["Organize credit card statements", "Keep card statements together with the corresponding bookkeeping period."],
-          ["Organize vendor invoices and receipts", "Sort supplier invoices and receipts so they can be found alongside related records."],
-          ["Maintain supporting documents for transactions", "Keep available transaction documentation linked or filed with the relevant records."],
-        ],
-      },
-      {
-        title: "Digital files and professional handoff",
-        tasks: [
-          ["Maintain digital bookkeeping folders", "Keep bookkeeping folders organized using the agreed access and storage workflow."],
-          ["Organize monthly financial files", "Arrange monthly records so statements and supporting documents remain grouped by period."],
-          ["Maintain consistent file naming", "Apply consistent names and organization to make documents easier to identify."],
-          ["Prepare documents for accountants and tax professionals", "Collect and organize requested records for handoff; professional tax work remains with the qualified provider."],
+          ["Reconcile payroll-related accounts", "Compare recorded payroll amounts with available reports and account activity."],
+          ["Track payroll liabilities for review", "Maintain liability records shown in supplied reports and flag open balances."],
+          ["Coordinate discrepancies", "Share questions or differences with you or your payroll provider for appropriate review."],
         ],
       },
     ],

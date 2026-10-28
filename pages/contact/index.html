@@ -54,6 +54,7 @@
       <symbol id="i-sheet" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M4 9h16M4 15h16M10 3v18"/></symbol>
       <symbol id="i-chat" viewBox="0 0 24 24"><path d="M4 5h16v11H8l-4 4Z"/></symbol>
       <symbol id="i-send" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></symbol>
+      <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
     </svg>
 
     <a class="skip-link" href="#main">Skip to content</a>
@@ -65,57 +66,72 @@
           <a class="topbar-contact" href="../../pages/contact/index.html"><svg class="icon"><use href="#i-mail"/></svg><span>Get in touch</span></a>
         </div>
         <section class="section pg-section ct-section" id="contact" aria-labelledby="contact-title">
+          <div class="pg-head pg-head--plain ct-head">
+            <span class="pg-head-photo" style="background-image: url('../../assets/images/services/monthly-bookkeeping.jpg')" aria-hidden="true"></span>
+            <p class="pg-eyebrow">START A CONVERSATION</p>
+            <h1 id="contact-title">Let’s Talk About <span>Your Business Needs</span></h1>
+            <p class="pg-intro">Have a question or need bookkeeping or administrative support? Choose whether you’d like to send me an inquiry or schedule a consultation.</p>
+          </div>
           <div class="ct-layout">
-            <div class="ct-intro">
-              <div class="pg-head pg-head--plain">
-                <p class="pg-eyebrow">START A CONVERSATION</p>
-                <h1 id="contact-title">Let’s Talk About <span>Your Business Needs</span></h1>
-                <p class="pg-intro">Looking for bookkeeping or administrative support? Let’s discuss your requirements and explore how I can help keep your records and daily operations organized.</p>
-              </div>
-              <div class="ct-card">
-                <div class="ct-profile"><img src="../../assets/images/genesis-solomon-bookkeeper.jpg" alt="Genesis Solomon" width="256" height="256"><div><strong>Genesis Solomon</strong><small>Bookkeeping &amp; Administrative Support</small></div></div>
+            <aside class="ct-card" aria-labelledby="ct-card-name">
+              <img class="ct-photo" src="../../assets/images/genesis-solomon-bookkeeper.jpg" alt="Genesis Solomon" width="256" height="256">
+              <h2 class="ct-name" id="ct-card-name">Genesis Solomon</h2>
+              <p class="ct-role">Bookkeeping Specialist &amp; Administrative Support</p>
+              <p class="ct-bio">Helping business owners keep their financial records organized and focus on what matters most — growing their business.</p>
+              <div class="ct-methods">
                 <a class="ct-method" href="mailto:info.genesissolomon@gmail.com"><span><svg class="icon" aria-hidden="true"><use href="#i-mail"/></svg></span><div><small>Email</small><strong>info.genesissolomon@gmail.com</strong></div></a>
                 <a class="ct-method" href="tel:+639518094340"><span><svg class="icon" aria-hidden="true"><use href="#i-phone"/></svg></span><div><small>Phone</small><strong>+63 951 809 4340</strong></div></a>
               </div>
-            </div>
+            </aside>
             <div class="ct-panel">
-              <form class="contact-form" id="contact-form" novalidate data-endpoint="/api/inquiries">
-                <div class="form-heading"><span class="form-heading-icon"><svg class="icon" aria-hidden="true"><use href="#i-mail"/></svg></span><h3>Send an inquiry</h3><p>Fields marked <span aria-hidden="true">*</span> are required.</p></div>
-                <div class="form-grid">
-                  <div class="form-field"><label for="full-name">Full name <span aria-hidden="true">*</span></label><input id="full-name" name="full_name" autocomplete="name" required maxlength="100" placeholder="Your full name" aria-describedby="full-name-error"><p class="field-error" id="full-name-error" hidden></p></div>
-                  <div class="form-field"><label for="email">Email address <span aria-hidden="true">*</span></label><input id="email" name="email" type="email" autocomplete="email" required maxlength="254" placeholder="you@business.com" aria-describedby="email-error"><p class="field-error" id="email-error" hidden></p></div>
-                  <div class="form-field"><label for="business">Business name</label><input id="business" name="business_name" autocomplete="organization" maxlength="120" placeholder="Your business name (optional)" aria-describedby="business-error"><p class="field-error" id="business-error" hidden></p></div>
-                  <div class="form-field"><label for="service">Service needed <span aria-hidden="true">*</span></label><select id="service" name="service_needed" required aria-describedby="service-error"><option value="" disabled selected>Select a service</option><option>Bookkeeping Services</option><option>Administrative Support</option><option>Both Bookkeeping and Administrative Support</option><option>Other</option></select><p class="field-error" id="service-error" hidden></p></div>
-                  <div class="form-field"><label for="industry">Industry <span aria-hidden="true">*</span></label><select id="industry" name="industry" required aria-describedby="industry-error"><option value="" disabled selected>Select an industry</option><option>Construction</option><option>Real Estate</option><option>Small Business</option><option>Landscaping &amp; Lawn Care</option><option>Other</option></select><p class="field-error" id="industry-error" hidden></p></div>
-                  <div class="form-field form-field--wide"><label for="message">Message <span aria-hidden="true">*</span></label><textarea id="message" name="message" rows="5" maxlength="3000" required placeholder="Tell me about your business and how I can help…" aria-describedby="message-error message-count"></textarea><div class="ct-field-meta"><p class="field-error" id="message-error" hidden></p><span class="ct-count" id="message-count">0/3000</span></div></div>
+              <div class="ct-tabs" role="tablist" aria-label="How would you like to get in touch?" data-contact-tabs>
+                <button class="ct-tab" type="button" role="tab" id="ct-tab-inquiry" aria-controls="ct-inquiry" aria-selected="true"><span class="ct-tab-icon"><svg class="icon" aria-hidden="true"><use href="#i-mail"/></svg></span><span><strong>Send an Inquiry</strong><small>Fill out the form and I’ll get back to you.</small></span></button>
+                <button class="ct-tab" type="button" role="tab" id="ct-tab-book" aria-controls="ct-book" aria-selected="false" tabindex="-1"><span class="ct-tab-icon"><svg class="icon" aria-hidden="true"><use href="#i-calendar"/></svg></span><span><strong>Book a Consultation</strong><small>Choose a date and time.</small></span></button>
+              </div>
+              <div class="ct-inquiry" id="ct-inquiry" role="tabpanel" aria-labelledby="ct-tab-inquiry">
+                <form class="contact-form" id="contact-form" novalidate data-endpoint="/api/inquiries">
+                  <div class="form-heading"><span class="form-heading-icon"><svg class="icon" aria-hidden="true"><use href="#i-mail"/></svg></span><div><h3>Send an Inquiry</h3><p>Fill out the form below and I’ll get back to you as soon as possible.</p></div></div>
+                  <div class="form-grid">
+                    <div class="form-field"><label for="full-name">Full Name <span aria-hidden="true">*</span></label><div class="ct-input"><svg class="icon" aria-hidden="true"><use href="#i-user"/></svg><input id="full-name" name="full_name" autocomplete="name" required maxlength="100" placeholder="Your full name" aria-describedby="full-name-error"></div><p class="field-error" id="full-name-error" hidden></p></div>
+                    <div class="form-field"><label for="email">Email Address <span aria-hidden="true">*</span></label><div class="ct-input"><svg class="icon" aria-hidden="true"><use href="#i-mail"/></svg><input id="email" name="email" type="email" autocomplete="email" required maxlength="254" placeholder="youremail@example.com" aria-describedby="email-error"></div><p class="field-error" id="email-error" hidden></p></div>
+                    <div class="form-field"><label for="business">Business Name <em>(Optional)</em></label><div class="ct-input"><svg class="icon" aria-hidden="true"><use href="#i-building"/></svg><input id="business" name="business_name" autocomplete="organization" maxlength="120" placeholder="Your business name" aria-describedby="business-error"></div><p class="field-error" id="business-error" hidden></p></div>
+                    <div class="form-field"><label for="industry">Industry <span aria-hidden="true">*</span></label><div class="ct-input"><svg class="icon" aria-hidden="true"><use href="#i-briefcase"/></svg><select id="industry" name="industry" required aria-describedby="industry-error"><option value="" disabled selected>Select your industry</option><option>Construction</option><option>Real Estate</option><option>Small Business</option><option>Landscaping &amp; Lawn Care</option><option>Other</option></select></div><p class="field-error" id="industry-error" hidden></p></div>
+                    <div class="form-field form-field--wide"><label for="service">Service Needed <span aria-hidden="true">*</span></label><div class="ct-input"><svg class="icon" aria-hidden="true"><use href="#i-grid"/></svg><select id="service" name="service_needed" required aria-describedby="service-error"><option value="" disabled selected>Select a service</option><option>Bookkeeping Services</option><option>Administrative Support</option><option>Both Bookkeeping and Administrative Support</option><option>Other</option></select></div><p class="field-error" id="service-error" hidden></p></div>
+                    <div class="form-field form-field--wide"><label for="message">Message <span aria-hidden="true">*</span></label><div class="ct-input ct-input--area"><svg class="icon" aria-hidden="true"><use href="#i-message"/></svg><textarea id="message" name="message" rows="4" maxlength="3000" required placeholder="Tell me about your business needs…" aria-describedby="message-error message-count"></textarea></div><div class="ct-field-meta"><p class="field-error" id="message-error" hidden></p><span class="ct-count" id="message-count">0/3000</span></div></div>
+                  </div>
+                  <div class="ct-hp" aria-hidden="true"><label for="hp-field">Leave this field empty</label><input id="hp-field" name="hp_field" type="text" tabindex="-1" autocomplete="off"></div>
+                  <button class="button button--primary form-submit" type="submit"><svg class="icon" aria-hidden="true"><use href="#i-send"/></svg><span data-submit-label>Send Message</span> <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></button>
+                  <p class="form-feedback" id="form-feedback" role="status" aria-live="polite"></p>
+                  <p class="form-note"><svg class="icon" aria-hidden="true"><use href="#i-lock"/></svg><span>Your information is safe and will only be used to respond to your inquiry.</span></p>
+                </form>
+                <div class="ct-thanks" id="contact-thanks" tabindex="-1" aria-labelledby="contact-thanks-title" hidden>
+                  <span class="ct-thanks-mark" aria-hidden="true"><svg class="icon"><use href="#i-check"/></svg></span>
+                  <h2 id="contact-thanks-title">Thank You!</h2>
+                  <p class="ct-thanks-sub">Your inquiry has been received.</p>
+                  <p class="ct-thanks-text">I appreciate you reaching out. I’ll review your message and get back to you as soon as possible.</p>
+                  <div class="ct-next">
+                    <p class="ct-next-title"><svg class="icon" aria-hidden="true"><use href="#i-mail"/></svg>What happens next?</p>
+                    <ul><li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>I’ll review your inquiry and message.</li><li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>I’ll prepare the best next steps for your needs.</li><li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>You’ll hear from me via email.</li></ul>
+                  </div>
+                  <a class="button button--primary ct-home" href="../../index.html">Back to Home <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a>
                 </div>
-                <div class="ct-hp" aria-hidden="true"><label for="hp-field">Leave this field empty</label><input id="hp-field" name="hp_field" type="text" tabindex="-1" autocomplete="off"></div>
-                <button class="button button--primary form-submit" type="submit"><svg class="icon" aria-hidden="true"><use href="#i-send"/></svg><span data-submit-label>Send Message</span> <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></button>
-                <p class="form-feedback" id="form-feedback" role="status" aria-live="polite"></p>
-                <p class="form-note"><svg class="icon" aria-hidden="true"><use href="#i-shield"/></svg><span>Your information will be used only to respond to your inquiry. It is stored privately, and I won’t share your details with third parties.</span></p>
-              </form>
-              <div class="ct-thanks" id="contact-thanks" tabindex="-1" aria-labelledby="contact-thanks-title" hidden>
-                <span class="ct-thanks-mark" aria-hidden="true"><svg class="icon"><use href="#i-check"/></svg></span>
-                <h2 id="contact-thanks-title">Thank You!</h2>
-                <p class="ct-thanks-sub">Your inquiry has been received.</p>
-                <p class="ct-thanks-text">I appreciate you reaching out. I’ll review your message and get back to you as soon as possible.</p>
-                <div class="ct-next">
-                  <p class="ct-next-title"><svg class="icon" aria-hidden="true"><use href="#i-mail"/></svg>What happens next?</p>
-                  <ul><li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>I’ll review your inquiry and message.</li><li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>I’ll prepare the best next steps for your needs.</li><li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>You’ll hear from me via email.</li></ul>
-                </div>
-                <a class="button button--primary ct-home" href="../../index.html">Back to Home <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+              </div>
+              <div class="ct-book" id="ct-book" role="tabpanel" aria-labelledby="ct-tab-book" tabindex="0" hidden>
+                <div class="form-heading"><span class="form-heading-icon"><svg class="icon" aria-hidden="true"><use href="#i-calendar"/></svg></span><div><h3>Schedule a Consultation</h3><p>Choose a date and time that works for you on my Google Calendar booking page.</p></div></div>
+                <ul class="ct-book-facts">
+                  <li><svg class="icon" aria-hidden="true"><use href="#i-clock"/></svg>60-minute consultation</li>
+                  <li><svg class="icon" aria-hidden="true"><use href="#i-laptop"/></svg>Google Meet video call</li>
+                </ul>
+                <a class="button button--primary ct-book-cta" href="https://calendar.app.google/zAW1LH43CHeXtq1j8" target="_blank" rel="noopener" aria-label="Book a Consultation (opens Google Calendar in a new tab)"><svg class="icon" aria-hidden="true"><use href="#i-calendar"/></svg>Book a Consultation <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+                <p class="form-note"><svg class="icon" aria-hidden="true"><use href="#i-shield"/></svg><span>Booking happens on Google Calendar: you pick an available date and time there, and Google confirms the appointment and adds the Google Meet details. Nothing is booked until Google Calendar shows the confirmation.</span></p>
+                <div class="ct-book-embed" data-booking-embed hidden></div>
               </div>
             </div>
-          </div>
-          <div class="ct-expect" aria-labelledby="expectations-title">
-            <span class="ct-expect-icon"><svg class="icon" aria-hidden="true"><use href="#i-shield"/></svg></span>
-            <div><p class="pg-eyebrow">THE WORKING EXPERIENCE</p><h2 id="expectations-title">What You Can Expect</h2><p>Clear communication, organized documentation, careful handling of business information, and a professional approach to the responsibilities we agree on.</p></div>
-            <ul><li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Thoughtful, organized records</li><li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Consistent recordkeeping</li><li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Careful handling of information</li></ul>
           </div>
         </section>
         <footer class="site-footer">
           <a class="footer-brand" href="../../index.html"><img class="brand-mark" src="../../assets/images/genesis-solomon-bookkeeper.jpg" alt="Genesis Solomon, bookkeeping specialist"><span><strong>Genesis Solomon</strong><small>Bookkeeping &amp; Administrative Support</small></span></a>
-          <nav class="footer-nav" aria-label="Footer navigation"><a href="../../pages/about/index.html">About</a><a href="../../pages/bookkeeping/index.html">Services</a><a href="../../pages/industries/index.html">Industries</a><a href="../../pages/contact/index.html">Contact</a></nav>
+          <nav class="footer-nav" aria-label="Footer navigation"><a href="../../pages/about/index.html">About</a><a href="../../pages/bookkeeping/index.html">Services</a><a href="../../pages/about/index.html#industries">Industries</a><a href="../../pages/contact/index.html">Contact</a></nav>
           <div class="footer-bottom"><span>© <span id="copyright-year">2026</span> Genesis Solomon. All rights reserved.</span><a href="mailto:info.genesissolomon@gmail.com">Get in touch <svg class="icon"><use href="#i-arrow"/></svg></a></div>
         </footer>
       </main>

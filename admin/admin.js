@@ -1,10 +1,14 @@
 // Inquiries admin: Supabase Auth sign-in, then reads and updates inquiries through Supabase's REST API.
 // Every request carries the signed-in user's token; row level security in the database decides what it may do.
+// Sending email (replies, notification retries) goes through the admin-only /api functions, which check the same token.
 // Inquiry text comes from the public, so it is only ever written into the page with textContent.
 (() => {
   const SESSION_KEY = "gs-admin-session";
   const PAGE_SIZE = 10;
-  const COLUMNS = "id,full_name,email,business_name,service_needed,industry,message,status,created_at,updated_at";
+  const COLUMNS = "id,full_name,email,business_name,service_needed,industry,message,status,created_at,updated_at,notification_status,notification_sent_at,notification_attempted_at,notification_error";
+  const REPLY_COLUMNS = "id,recipient_email,subject,reply_body,send_status,error,created_at,sent_at";
+  const REPLY_LABELS = { sent: "Sent", failed: "Failed", sending: "Sending" };
+  const NOTIFICATION_STALLED_MS = 2 * 60_000;
   const STATUS_LABELS = { new: "New", in_progress: "In Progress", replied: "Replied", closed: "Closed" };
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -18,6 +22,9 @@
   let rows = [];
   let current = null;
   let searchTimer = 0;
+  // Unsent reply drafts by inquiry id. clientRef identifies one send, so a retried request can't email twice.
+  const drafts = new Map();
+  let sendingReply = false;
 
   const show = (view) => {
     document.body.dataset.view = view;
@@ -89,6 +96,18 @@
     if (!response.ok) throw new Error(`Request failed (${response.status})`);
     return response;
   }
+  // Calls an admin-only Vercel function with the session token. Resolves with { ok, status, data }.
+  async function serverPost(path, body, retried = false) {
+    if (!session) throw new SignedOut();
+    if (session.expires_at - 60 < Date.now() / 1000 && !(await refreshSession())) throw new SignedOut();
+    const response = await fetch(`/api/${path}`, { method: "POST", headers: { authorization: `Bearer ${session.access_token}`, "content-type": "application/json" }, body: JSON.stringify(body) });
+    if (response.status === 401) {
+      if (!retried && (await refreshSession())) return serverPost(path, body, true);
+      throw new SignedOut();
+    }
+    const data = await response.json().catch(() => ({}));
+    return { ok: response.ok, status: response.status, data };
+  }
   const countFrom = (response) => Number((response.headers.get("content-range") || "*/0").split("/")[1]) || 0;
 
   async function isAdmin() {
@@ -157,7 +176,8 @@
       );
       const view = el("button", { type: "button", class: "adm-icon-btn", "aria-label": `View inquiry from ${row.full_name}` }, icon("a-eye"));
       view.addEventListener("click", () => openDetail(row, view));
-      const reply = el("a", { class: "adm-icon-btn", href: replyLink(row), "aria-label": `Reply to ${row.full_name} by email` }, icon("a-mail"));
+      const reply = el("button", { type: "button", class: "adm-icon-btn", "aria-label": `Reply to ${row.full_name}` }, icon("a-mail"));
+      reply.addEventListener("click", () => { openDetail(row, reply); openReply(); });
       tr.append(el("td", { class: "adm-actions", "data-label": "Actions" }, view, reply));
       return tr;
     }));
@@ -173,8 +193,6 @@
     $$("[data-view-status]").forEach((button) => button.setAttribute("aria-current", String(button.dataset.viewStatus === filters.status)));
   }
 
-  const replyLink = (row) => `mailto:${encodeURIComponent(row.email).replace(/%40/g, "@")}?subject=${encodeURIComponent(`Re: Your inquiry about ${row.service_needed}`)}&body=${encodeURIComponent(`Hi ${row.full_name},\n\nThank you for reaching out.\n\n`)}`;
-
   let detailOpener = null;
   function openDetail(row, opener) {
     current = row;
@@ -185,23 +203,156 @@
       node.textContent = key === "created_at" ? dateTime.format(new Date(row.created_at)) : (row[key] || "—");
     });
     $("[data-detail-status]").value = row.status;
-    $("[data-reply]").href = replyLink(row);
+    renderNotification(row);
     $("[data-copy-email] span").textContent = "Copy";
     showError($("[data-detail-error]"), "");
     $("[data-detail-saved]").textContent = "";
+    showReplyForm(false);
     detail.hidden = false;
     $("[data-detail-backdrop]").hidden = false;
     document.body.classList.add("adm-detail-open");
     renderRows();
     detail.focus();
+    loadReplies(row.id);
   }
   function closeDetail() {
+    if (sendingReply) return;
     current = null;
+    showReplyForm(false);
     $("[data-detail]").hidden = true;
     $("[data-detail-backdrop]").hidden = true;
     document.body.classList.remove("adm-detail-open");
     renderRows();
     if (detailOpener?.isConnected) detailOpener.focus();
+  }
+
+  function renderNotification(row) {
+    const text = $("[data-notification-text]");
+    const retry = $("[data-notification-retry]");
+    const stalled = row.notification_status === "sending" && Date.now() - new Date(row.notification_attempted_at || 0) > NOTIFICATION_STALLED_MS;
+    const messages = {
+      sent: `Sent ${row.notification_sent_at ? dateTime.format(new Date(row.notification_sent_at)) : ""}`.trim(),
+      sending: stalled ? "Didn’t finish sending." : "Sending…",
+      failed: `Failed: ${row.notification_error || "the email couldn’t be sent."}`,
+      not_configured: "Not sent: email wasn’t set up when this arrived.",
+    };
+    text.textContent = messages[row.notification_status] || "—";
+    retry.hidden = !(row.notification_status === "failed" || row.notification_status === "not_configured" || stalled);
+    $("span", retry).textContent = row.notification_status === "not_configured" ? "Send now" : "Retry";
+  }
+
+  async function reloadCurrent() {
+    if (!current) return;
+    const id = current.id;
+    const [row] = await (await api(`inquiries?id=eq.${id}&select=${COLUMNS}`)).json();
+    if (!row || current?.id !== id) return;
+    current = row;
+    $("[data-detail-status]").value = row.status;
+    renderNotification(row);
+  }
+
+  let repliesRequest = 0;
+  async function loadReplies(inquiryId) {
+    const request = ++repliesRequest;
+    const list = $("[data-replies]");
+    const empty = $("[data-replies-empty]");
+    list.replaceChildren();
+    $("[data-reply-count]").textContent = "";
+    empty.textContent = "Loading replies…";
+    empty.hidden = false;
+    try {
+      const replies = await (await api(`inquiry_replies?inquiry_id=eq.${inquiryId}&select=${REPLY_COLUMNS}&order=created_at.desc`)).json();
+      if (request !== repliesRequest) return;
+      $("[data-reply-count]").textContent = replies.length ? `(${replies.length})` : "";
+      empty.textContent = "No replies sent yet.";
+      empty.hidden = replies.length > 0;
+      list.replaceChildren(...replies.map((reply) => {
+        const status = el("span", { class: `adm-badge adm-badge--reply-${reply.send_status}`, text: REPLY_LABELS[reply.send_status] || reply.send_status });
+        const when = el("time", { datetime: reply.sent_at || reply.created_at, text: dateTime.format(new Date(reply.sent_at || reply.created_at)) });
+        const body = el("details", {}, el("summary", { text: reply.subject }), el("p", { text: reply.reply_body }));
+        const item = el("li", { class: "adm-reply-item" }, el("div", { class: "adm-reply-meta" }, status, when), body);
+        if (reply.send_status === "failed" && reply.error) item.append(el("p", { class: "adm-reply-error", text: reply.error }));
+        return item;
+      }));
+    } catch (error) {
+      if (request !== repliesRequest) return;
+      empty.textContent = "Replies couldn’t be loaded.";
+      if (error instanceof SignedOut) handleError(error);
+    }
+  }
+
+  function showReplyForm(open) {
+    $("[data-detail-view]").hidden = open;
+    $("[data-reply-form]").hidden = !open;
+    $("[data-detail-title]").textContent = open && current ? `Reply to ${current.full_name}` : "Inquiry Details";
+  }
+
+  function openReply() {
+    if (!current) return;
+    const firstName = current.full_name.split(" ")[0];
+    const draft = drafts.get(current.id) || {
+      subject: "Re: Your Bookkeeping Inquiry",
+      message: `Hi ${firstName},\n\nThank you for reaching out. \n\nBest regards,\nGenesis Solomon`,
+      clientRef: null,
+    };
+    drafts.set(current.id, draft);
+    const form = $("[data-reply-form]");
+    $("[data-reply-to]").value = current.email;
+    form.subject.value = draft.subject;
+    form.message.value = draft.message;
+    showError($("[data-reply-error]"), "");
+    showReplyForm(true);
+    form.message.focus();
+    const caret = draft.message.indexOf("\n\nBest regards");
+    if (caret > 0) form.message.setSelectionRange(caret, caret);
+  }
+
+  async function sendReply(event) {
+    event.preventDefault();
+    if (!current || sendingReply) return;
+    const form = event.currentTarget;
+    const inquiry = current;
+    const draft = drafts.get(inquiry.id);
+    const errorNode = $("[data-reply-error]");
+    draft.subject = form.subject.value;
+    draft.message = form.message.value;
+    if (!draft.subject.trim()) { showError(errorNode, "Please enter a subject."); return form.subject.focus(); }
+    if (!draft.message.trim()) { showError(errorNode, "Please write a message."); return form.message.focus(); }
+    draft.clientRef ||= crypto.randomUUID();
+    sendingReply = true;
+    const button = $("[data-reply-send]");
+    button.disabled = true;
+    $("[data-reply-cancel]").disabled = true;
+    $("span", button).textContent = "Sending…";
+    showError(errorNode, "");
+    try {
+      const { ok, status, data } = await serverPost("replies", { inquiry_id: inquiry.id, subject: draft.subject, message: draft.message, client_ref: draft.clientRef });
+      if (ok) {
+        drafts.delete(inquiry.id);
+        if (current?.id === inquiry.id) {
+          showReplyForm(false);
+          $("[data-detail-saved]").textContent = data.warning || `Reply sent to ${inquiry.email}. Gmail accepted it for delivery; that doesn’t guarantee it reached their inbox.`;
+          await reloadCurrent().catch(() => {});
+          loadReplies(inquiry.id);
+        }
+        await refreshAll();
+        return;
+      }
+      // A recorded failure, or a request rejected before anything was saved, means the next click is a new attempt.
+      // "Already being sent" keeps the same id so it can't go out twice.
+      if (data.reply?.send_status === "failed" || (status === 400 && !data.reply)) draft.clientRef = null;
+      showError(errorNode, `${data.error || "The reply couldn’t be sent."} Your draft is kept, so you can try again.`);
+      if (current?.id === inquiry.id) loadReplies(inquiry.id);
+    } catch (error) {
+      // The request may or may not have reached the server, so the same id is reused: a retry can't send twice.
+      if (error instanceof SignedOut) return handleError(error);
+      showError(errorNode, "Couldn’t reach the server. Your draft is kept; click Send Reply again and it won’t be sent twice.");
+    } finally {
+      sendingReply = false;
+      button.disabled = false;
+      $("[data-reply-cancel]").disabled = false;
+      $("span", button).textContent = "Send Reply";
+    }
   }
 
   async function refreshAll() {
@@ -317,7 +468,11 @@
 
   $("[data-detail-close]").addEventListener("click", closeDetail);
   $("[data-detail-backdrop]").addEventListener("click", closeDetail);
-  document.addEventListener("keydown", (event) => { if (event.key === "Escape" && current) closeDetail(); });
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape" || !current || sendingReply) return;
+    if (!$("[data-reply-form]").hidden) showReplyForm(false);
+    else closeDetail();
+  });
 
   $("[data-copy-email]").addEventListener("click", async () => {
     const label = $("[data-copy-email] span");
@@ -349,6 +504,35 @@
       handleError(error, $("[data-detail-error]"), "The status couldn’t be saved. Please try again.");
     } finally {
       select.disabled = false;
+    }
+  });
+
+  $("[data-reply-open]").addEventListener("click", openReply);
+  $("[data-reply-form]").addEventListener("submit", sendReply);
+  $("[data-reply-form]").addEventListener("input", (event) => {
+    const draft = current && drafts.get(current.id);
+    if (draft && (event.target.name === "subject" || event.target.name === "message")) draft[event.target.name] = event.target.value;
+  });
+  $("[data-reply-cancel]").addEventListener("click", () => {
+    showReplyForm(false);
+    $("[data-reply-open]").focus();
+  });
+
+  $("[data-notification-retry]").addEventListener("click", async (event) => {
+    if (!current) return;
+    const button = event.currentTarget;
+    button.disabled = true;
+    showError($("[data-detail-error]"), "");
+    $("[data-detail-saved]").textContent = "";
+    try {
+      const { ok, data } = await serverPost("retry-notification", { inquiry_id: current.id });
+      if (ok) $("[data-detail-saved]").textContent = "Notification email sent to you.";
+      else showError($("[data-detail-error]"), data.error || "The notification couldn’t be sent.");
+      await reloadCurrent();
+    } catch (error) {
+      handleError(error, $("[data-detail-error]"), "Couldn’t reach the server. Please try again.");
+    } finally {
+      button.disabled = false;
     }
   });
 

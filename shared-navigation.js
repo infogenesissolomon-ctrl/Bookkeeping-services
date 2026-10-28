@@ -7,13 +7,9 @@ const socialLinks = {
 };
 const navigationItems = [
   ["overview", "Overview", "index.html", "M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z"],
-  ["about", "About me", "pages/about/index.html", "M20 21a8 8 0 0 0-16 0M12 13a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"],
-  ["bookkeeping", "Bookkeeping services", "pages/bookkeeping/index.html", "M4 19.5A2.5 2.5 0 0 1 6.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"],
-  ["administrative", "Administrative support", "pages/administrative/index.html", "M3 7h18v14H3zM8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18"],
-  ["industries", "Industry experience", "pages/industries/index.html", "M3 21h18M5 21V5l7-3 7 3v16M9 9h.01M15 9h.01M9 13h.01M15 13h.01"],
-  ["tools", "Software & tools", "pages/tools/index.html", "M4 4h16v12H4zM2 20h20l-2-4H4z"],
-  ["process", "My work process", "pages/process/index.html", "M6 19a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm13-16a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM9 16h8a4 4 0 0 0 0-8h-2a4 4 0 0 1 0-8h3"],
-  ["values", "Professional values", "pages/values/index.html", "M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z"],
+  ["about", "About Me", "pages/about/index.html", "M20 21a8 8 0 0 0-16 0M12 13a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"],
+  ["bookkeeping", "Bookkeeping Services", "pages/bookkeeping/index.html", "M4 19.5A2.5 2.5 0 0 1 6.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"],
+  ["administrative", "Administrative Support", "pages/administrative/index.html", "M3 7h18v14H3zM8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18"],
   ["pricing", "Pricing", "pages/pricing/index.html", "M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8ZM7.5 7.5h.01"],
   ["contact", "Contact", "pages/contact/index.html", "M3 5h18v14H3zM3 7l9 6 9-6"],
 ];
@@ -26,6 +22,10 @@ const navigationSubmenus = {
     ["Accounts Receivable", "services/accounts-receivable/index.html"],
     ["Financial Reporting Support", "services/financial-reporting/index.html"],
     ["Monthly Bookkeeping", "services/monthly-bookkeeping/index.html"],
+    ["Catch-Up & Bookkeeping Cleanup", "services/bookkeeping-cleanup/index.html"],
+    ["Month-End Closing Support", "services/month-end-closing/index.html"],
+    ["Job Costing & Project Expense Tracking", "services/job-costing/index.html"],
+    ["Financial Document Management", "services/financial-document-management/index.html"],
   ],
 };
 
@@ -140,3 +140,15 @@ navigation.querySelectorAll(".nav-group-toggle").forEach((toggle) => {
     toggle.setAttribute("aria-expanded", String(isOpen));
   });
 });
+
+// tawk.to live chat (official embed code), added once per page. Every public page loads this file; the admin dashboard does not.
+if (!document.querySelector('script[src^="https://embed.tawk.to/"]')) {
+  window.Tawk_API = window.Tawk_API || {};
+  window.Tawk_LoadStart = new Date();
+  const tawkScript = document.createElement("script");
+  tawkScript.async = true;
+  tawkScript.src = "https://embed.tawk.to/6ae08d761e2fa534748c9074/1k5uih5t3";
+  tawkScript.charset = "UTF-8";
+  tawkScript.setAttribute("crossorigin", "*");
+  document.head.appendChild(tawkScript);
+}

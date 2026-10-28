@@ -24,4 +24,29 @@ function clientIp(req) {
   return forwarded || req.headers["x-real-ip"] || req.socket?.remoteAddress || "";
 }
 
-module.exports = { serverConfig, secretHeaders, hashSubmitter, clientIp };
+// Resolves to the signed-in user's id when the request carries a valid Supabase session for an account in admin_users,
+// otherwise null. Used by the admin-only functions; the dashboard sends its session token as a bearer token.
+async function requireAdmin(req, config) {
+  const token = String(req.headers.authorization || "").replace(/^Bearer\s+/i, "");
+  if (!token || token === req.headers.authorization) return null;
+  const user = await fetch(`${config.url}/auth/v1/user`, { headers: { apikey: config.secretKey, authorization: `Bearer ${token}` } });
+  if (!user.ok) return null;
+  const { id } = await user.json();
+  if (!id) return null;
+  const admin = await fetch(`${config.url}/rest/v1/admin_users?select=user_id&user_id=eq.${encodeURIComponent(id)}`, { headers: secretHeaders(config.secretKey) });
+  if (!admin.ok) throw new Error(`admin check ${admin.status}`);
+  return (await admin.json()).length ? id : null;
+}
+
+// PATCH rows matching a PostgREST filter and return the updated rows.
+async function patchRows(config, table, filter, values, select = "id") {
+  const response = await fetch(`${config.url}/rest/v1/${table}?${filter}&select=${select}`, {
+    method: "PATCH",
+    headers: secretHeaders(config.secretKey, { prefer: "return=representation" }),
+    body: JSON.stringify(values),
+  });
+  if (!response.ok) throw new Error(`update ${table} ${response.status} ${(await response.text()).slice(0, 200)}`);
+  return response.json();
+}
+
+module.exports = { serverConfig, secretHeaders, hashSubmitter, clientIp, requireAdmin, patchRows };

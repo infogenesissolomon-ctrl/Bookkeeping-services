@@ -5,3 +5,6 @@ Genesis Solomon Professional Bookkeeper Expert.pdf
 .env.*
 !.env.example
 .vercel
+
+# Installed packages (Vercel installs them from package-lock.json).
+node_modules/

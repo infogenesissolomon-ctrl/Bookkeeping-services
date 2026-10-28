@@ -34,6 +34,8 @@
       <symbol id="a-message" viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"/></symbol>
       <symbol id="a-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></symbol>
       <symbol id="a-lock" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+      <symbol id="a-send" viewBox="0 0 24 24"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4Z"/></symbol>
+      <symbol id="a-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.9 1.9 0 0 0 3.4 0"/></symbol>
       <symbol id="a-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 0-14.3-4.9L4 8M4 4v4h4M4 13a8 8 0 0 0 14.3 4.9L20 16M20 20v-4h-4"/></symbol>
     </svg>
 
@@ -120,7 +122,8 @@
 
       <div class="adm-backdrop" data-detail-backdrop hidden></div>
       <aside class="adm-detail" data-detail aria-labelledby="adm-detail-title" tabindex="-1" hidden>
-        <header><h2 id="adm-detail-title">Inquiry Details</h2><button type="button" class="adm-icon-btn" data-detail-close aria-label="Close inquiry details"><svg class="icon" aria-hidden="true"><use href="#a-close"/></svg></button></header>
+        <header><h2 id="adm-detail-title" data-detail-title>Inquiry Details</h2><button type="button" class="adm-icon-btn" data-detail-close aria-label="Close inquiry details"><svg class="icon" aria-hidden="true"><use href="#a-close"/></svg></button></header>
+        <div class="adm-detail-view" data-detail-view>
         <dl class="adm-detail-list">
           <div><span><svg class="icon" aria-hidden="true"><use href="#a-user"/></svg></span><dt>Full name</dt><dd data-field="full_name"></dd></div>
           <div><span><svg class="icon" aria-hidden="true"><use href="#a-mail"/></svg></span><dt>Email address</dt><dd><span data-field="email"></span><button type="button" class="adm-copy" data-copy-email><svg class="icon" aria-hidden="true"><use href="#a-copy"/></svg><span>Copy</span></button></dd></div>
@@ -130,13 +133,35 @@
           <div><span><svg class="icon" aria-hidden="true"><use href="#a-message"/></svg></span><dt>Message</dt><dd class="adm-message" data-field="message"></dd></div>
           <div><span><svg class="icon" aria-hidden="true"><use href="#a-calendar"/></svg></span><dt>Date received</dt><dd data-field="created_at"></dd></div>
           <div><span><svg class="icon" aria-hidden="true"><use href="#a-clock"/></svg></span><dt><label for="detail-status">Status</label></dt><dd><select id="detail-status" data-detail-status><option value="new">New</option><option value="in_progress">In Progress</option><option value="replied">Replied</option><option value="closed">Closed</option></select></dd></div>
+          <div><span><svg class="icon" aria-hidden="true"><use href="#a-bell"/></svg></span><dt>Email notification to you</dt><dd><span data-notification-text></span><button type="button" class="adm-copy" data-notification-retry hidden><svg class="icon" aria-hidden="true"><use href="#a-refresh"/></svg><span>Retry</span></button></dd></div>
         </dl>
+        <section class="adm-replies" aria-labelledby="adm-replies-title">
+          <h3 id="adm-replies-title">Replies <span data-reply-count></span></h3>
+          <p class="adm-muted" data-replies-empty>No replies sent yet.</p>
+          <ol data-replies></ol>
+        </section>
         <p class="adm-error" data-detail-error role="alert" hidden></p>
         <p class="adm-saved" data-detail-saved role="status" aria-live="polite"></p>
         <div class="adm-detail-actions">
-          <a class="adm-btn adm-btn--primary" data-reply><svg class="icon" aria-hidden="true"><use href="#a-mail"/></svg>Reply by Email</a>
+          <button type="button" class="adm-btn adm-btn--primary" data-reply-open><svg class="icon" aria-hidden="true"><use href="#a-send"/></svg>Reply</button>
           <button type="button" class="adm-btn adm-btn--danger" data-delete><svg class="icon" aria-hidden="true"><use href="#a-trash"/></svg>Delete</button>
         </div>
+        </div>
+
+        <form class="adm-reply-form" data-reply-form novalidate hidden>
+          <p class="adm-muted">Sent from your Gmail address. The client’s reply will arrive in your Gmail inbox.</p>
+          <label for="reply-to">To</label>
+          <input id="reply-to" type="email" data-reply-to readonly>
+          <label for="reply-subject">Subject</label>
+          <input id="reply-subject" name="subject" type="text" maxlength="200" required>
+          <label for="reply-message">Message</label>
+          <textarea id="reply-message" name="message" rows="12" maxlength="10000" required></textarea>
+          <p class="adm-error" data-reply-error role="alert" hidden></p>
+          <div class="adm-detail-actions">
+            <button type="submit" class="adm-btn adm-btn--primary" data-reply-send><svg class="icon" aria-hidden="true"><use href="#a-send"/></svg><span>Send Reply</span></button>
+            <button type="button" class="adm-btn adm-btn--ghost" data-reply-cancel>Cancel</button>
+          </div>
+        </form>
       </aside>
     </div>
 

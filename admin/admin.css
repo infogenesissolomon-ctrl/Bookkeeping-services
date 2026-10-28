@@ -12,7 +12,7 @@
 *, *::before, *::after { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
 body.adm { min-height: 100vh; margin: 0; background: var(--neutral); color: var(--navy); font-family: "Inter", "Segoe UI", Arial, sans-serif; font-size: 15px; line-height: 1.5; }
-button, input, select { font: inherit; }
+button, input, select, textarea { font: inherit; }
 [hidden] { display: none !important; }
 .icon { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
 .adm-sprite { position: absolute; }
@@ -130,6 +130,30 @@ button, input, select { font: inherit; }
 .adm-copy { display: inline-flex; align-items: center; gap: 4px; margin-left: auto; padding: 4px 10px; border: 1px solid #cfe0f7; border-radius: 8px; background: var(--pale); color: var(--blue); cursor: pointer; font-size: .75rem; font-weight: 700; }
 .adm-copy .icon { width: 14px; height: 14px; }
 .adm-detail-actions { display: grid; grid-template-columns: 1fr auto; gap: 10px; margin-top: auto; padding-top: 16px; }
+.adm-detail-view, .adm-reply-form { display: flex; flex: 1; flex-direction: column; }
+
+/* Reply history and the reply editor inside the details panel */
+.adm-replies { padding: 14px 0 4px; }
+.adm-replies h3 { margin: 0 0 8px; font-size: .9375rem; }
+.adm-replies h3 span { color: var(--muted); font-weight: 600; }
+.adm-replies .adm-muted { margin: 0; font-size: .875rem; }
+.adm-replies ol { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.adm-reply-item { padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: #fbfdff; }
+.adm-reply-meta { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; color: var(--muted); font-size: .75rem; }
+.adm-reply-meta .adm-badge { min-width: 0; }
+.adm-reply-item summary { margin-top: 6px; color: var(--navy); cursor: pointer; font-size: .875rem; font-weight: 600; overflow-wrap: anywhere; }
+.adm-reply-item details p { margin: 8px 0 0; color: #33465f; font-size: .875rem; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+.adm-reply-error { margin: 6px 0 0; color: #a61b1b; font-size: .8125rem; }
+.adm-badge--reply-sent { background: #e2f5ea; color: #146c43; }
+.adm-badge--reply-failed { background: #fdf0f0; color: #a61b1b; }
+.adm-badge--reply-sending { background: #fff2d9; color: #8a5300; }
+.adm-reply-form { gap: 6px; }
+.adm-reply-form > .adm-muted { margin: 0 0 6px; font-size: .875rem; }
+.adm-reply-form label { margin-top: 6px; font-size: .8125rem; font-weight: 700; }
+.adm-reply-form input, .adm-reply-form textarea { width: 100%; padding: 10px 12px; border: 1px solid #d8e3f0; border-radius: 10px; background: #fff; color: var(--navy); font: inherit; font-size: .9375rem; }
+.adm-reply-form input[readonly] { background: var(--neutral); color: var(--text); }
+.adm-reply-form textarea { min-height: 220px; resize: vertical; line-height: 1.55; }
+.adm-reply-form input:focus, .adm-reply-form textarea:focus { border-color: var(--blue); outline: 0; box-shadow: 0 0 0 3px #1769e033; }
 
 @media (min-width: 1500px) {
   .adm-detail-open .adm-main { margin-right: 420px; }
