@@ -140,3 +140,12 @@ navigation.querySelectorAll(".nav-group-toggle").forEach((toggle) => {
     toggle.setAttribute("aria-expanded", String(isOpen));
   });
 });
+
+// Website chat assistant, added once per public page (the admin dashboard does not load this file).
+if (!document.querySelector("script[data-chatbot-loader]")) {
+  const chatScript = document.createElement("script");
+  chatScript.src = `${navigationBase}chatbot.js`;
+  chatScript.defer = true;
+  chatScript.dataset.chatbotLoader = "";
+  document.body.append(chatScript);
+}

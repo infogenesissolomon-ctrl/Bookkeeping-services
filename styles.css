@@ -5307,3 +5307,65 @@ body .service-detail-shell .fd-hero { background: radial-gradient(circle at 92% 
   .bs-cta > .button { justify-content: center; white-space: normal; }
 }
 
+
+/* Website chat assistant (chatbot.js): floating button bottom-right, panel above it; a bottom sheet on phones.
+   Sits under the mobile menu (z-index 14-15) so the menu always opens over it. */
+.gc { --gc-navy: #0b1f3a; --gc-blue: #1769e0; --gc-pale: #eaf4ff; --gc-line: #dfe8f4; position: fixed; z-index: 12; right: 20px; bottom: 20px; font-family: inherit; }
+.gc-launch { display: inline-flex; min-height: 56px; align-items: center; gap: 10px; padding: 0 20px 0 16px; border: 0; border-radius: 999px; background: linear-gradient(135deg, #1769e0, #0f4fb5); box-shadow: 0 14px 30px #1769e04d; color: #fff; font: inherit; font-size: .9375rem; font-weight: 700; cursor: pointer; transition: transform .2s ease, box-shadow .2s ease; }
+.gc-launch:hover { box-shadow: 0 18px 36px #1769e066; transform: translateY(-2px); }
+.gc-launch:focus-visible, .gc button:focus-visible, .gc a:focus-visible, .gc :is(input, select, textarea):focus-visible { outline: 3px solid #8fc5ff; outline-offset: 2px; }
+.gc-launch .icon { width: 24px; height: 24px; }
+.gc.is-open .gc-launch-label { display: none; }
+.gc.is-open .gc-launch { width: 56px; justify-content: center; padding: 0; }
+.gc-panel { position: absolute; right: 0; bottom: 70px; display: flex; width: min(380px, calc(100vw - 40px)); height: min(600px, calc(100dvh - 110px)); flex-direction: column; overflow: hidden; border: 1px solid var(--gc-line); border-radius: 18px; background: #f6f8fb; box-shadow: 0 24px 60px #0b1f3a40; }
+.gc-panel[hidden] { display: none; }
+.gc-head { display: flex; align-items: center; gap: 12px; padding: 14px 14px 14px 16px; background: linear-gradient(120deg, #0b1f3a, #123a72); color: #fff; }
+.gc-head img { width: 40px; height: 40px; border: 2px solid #ffffff40; border-radius: 50%; object-fit: cover; }
+.gc-head div { flex: 1; min-width: 0; }
+.gc .gc-head h2 { margin: 0; color: #fff; background: none; -webkit-text-fill-color: currentColor; animation: none; font-size: 1rem; line-height: 1.2; }
+.gc .gc-head p { margin: 2px 0 0; color: #b9d0ee; font-size: .75rem; line-height: 1.3; }
+.gc-close { display: grid; width: 40px; height: 40px; place-items: center; border: 0; border-radius: 10px; background: #ffffff14; color: #fff; cursor: pointer; }
+.gc-close .icon { width: 18px; height: 18px; }
+.gc-log { flex: 1; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; padding: 16px 14px 8px; overscroll-behavior: contain; }
+.gc-msg { max-width: 88%; padding: 10px 13px; border-radius: 14px; font-size: .875rem; line-height: 1.5; overflow-wrap: anywhere; }
+.gc .gc-msg p { margin: 0; color: inherit; font-size: inherit; line-height: inherit; }
+.gc .gc-msg p + p, .gc-msg :is(ul, ol) { margin: 6px 0 0; }
+.gc-msg :is(ul, ol) { padding-left: 18px; }
+.gc-msg a { color: var(--gc-blue); font-weight: 700; }
+.gc-msg--bot { align-self: flex-start; border: 1px solid var(--gc-line); border-bottom-left-radius: 4px; background: #fff; color: var(--gc-navy); }
+.gc-msg--user { align-self: flex-end; border-bottom-right-radius: 4px; background: var(--gc-blue); color: #fff; }
+.gc-msg--error { border-color: #f3c9c9; background: #fff6f6; color: #8a1f1f; }
+.gc-msg--typing { color: #6b7d95; font-style: italic; }
+.gc-chips { display: flex; gap: 6px; overflow-x: auto; padding: 4px 14px 8px; scrollbar-width: thin; }
+.gc-chip { flex: none; min-height: 34px; padding: 0 12px; border: 1px solid #c7dcf6; border-radius: 999px; background: #fff; color: var(--gc-blue); font: inherit; font-size: .8125rem; font-weight: 600; cursor: pointer; }
+.gc-chip:hover { background: var(--gc-pale); }
+.gc-form { display: flex; align-items: flex-end; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--gc-line); background: #fff; }
+.gc-form textarea { flex: 1; min-height: 42px; max-height: 120px; padding: 10px 12px; border: 1px solid var(--gc-line); border-radius: 12px; background: #f6f8fb; color: var(--gc-navy); font: inherit; font-size: 16px; line-height: 1.35; resize: none; }
+.gc-send { display: grid; width: 42px; height: 42px; flex: none; place-items: center; border: 0; border-radius: 12px; background: var(--gc-blue); color: #fff; cursor: pointer; }
+.gc-send:disabled { opacity: .5; cursor: progress; }
+.gc-send .icon { width: 18px; height: 18px; }
+.gc-foot { display: flex; justify-content: space-between; gap: 8px; padding: 0 12px 4px; background: #fff; }
+.gc-link { display: inline-flex; min-height: 36px; align-items: center; padding: 0 4px; border: 0; background: none; color: var(--gc-blue); font: inherit; font-size: .8125rem; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.gc .gc-note { margin: 0; padding: 4px 14px 10px; background: #fff; color: #66768b; font-size: .6875rem; line-height: 1.4; }
+.gc-lead { display: grid; gap: 4px; width: 100%; max-width: 100%; }
+.gc-lead label { margin-top: 6px; color: var(--gc-navy); font-size: .75rem; font-weight: 700; }
+.gc-lead :is(input:not([type=checkbox]), select, textarea) { width: 100%; min-height: 40px; padding: 8px 10px; border: 1px solid var(--gc-line); border-radius: 8px; background: #fff; color: var(--gc-navy); font: inherit; font-size: 16px; }
+.gc-lead .gc-consent { display: flex; align-items: flex-start; gap: 8px; font-weight: 500; line-height: 1.4; }
+.gc-lead .gc-consent input { width: 18px; height: 18px; flex: none; margin-top: 1px; }
+.gc .gc-lead-error { margin: 2px 0 0; color: #b42318; font-size: .75rem; }
+.gc-lead-error:empty { display: none; }
+.gc-submit { min-height: 44px; margin-top: 6px; border: 0; border-radius: 10px; background: var(--gc-blue); color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+.gc-submit:disabled { opacity: .6; cursor: progress; }
+.gc-hp, .gc-sr { position: absolute; overflow: hidden; width: 1px; height: 1px; clip: rect(0 0 0 0); white-space: nowrap; }
+/* The chat steps aside while the mobile menu is open */
+.menu-open .gc { display: none; }
+@media (max-width: 560px) {
+  .gc { right: 14px; bottom: 14px; }
+  .gc-launch-label { display: none; }
+  .gc-launch { width: 56px; justify-content: center; padding: 0; }
+  .gc-panel { position: fixed; right: 8px; bottom: 82px; left: 8px; width: auto; height: min(600px, calc(100dvh - 160px)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gc-launch { transition: none; }
+  .gc-launch:hover { transform: none; }
+}
